@@ -4,6 +4,7 @@ import { KeyringPair } from '@polkadot/keyring/types';
 import { EventRecord, ApplyExtrinsicResult } from '@polkadot/types/interfaces/';
 import { CodecHash } from '@polkadot/types/interfaces/runtime';
 import { ApiPromise } from '@polkadot/api';
+import BN from 'bn.js';
 
 interface ISubmitResult {
 	hash: CodecHash;
@@ -39,7 +40,11 @@ export async function sendAndFinalize(
 		let success = false;
 		let included: EventRecord[] = [];
 		let finalized: EventRecord[] = [];
-		tx.signAndSend(signer, ({ events = [], status, dispatchError }) => {
+
+		// Should be enough to get in front of the queue
+		const tip = new BN(1_000_000_000_000_000);
+
+		tx.signAndSend(signer, { tip }, ({ events = [], status, dispatchError }) => {
 			if (status.isInBlock) {
 				success = dispatchError ? false : true;
 				console.log(
